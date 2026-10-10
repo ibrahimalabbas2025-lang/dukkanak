@@ -1,0 +1,40 @@
+name: Build Dukkanak APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract project ZIP
+        run: |
+          mkdir -p android-src
+          ZIP_FILE=$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)
+          if [ -z "$ZIP_FILE" ]; then echo 'Project ZIP not found'; exit 1; fi
+          unzip -q "$ZIP_FILE" -d android-src
+          WRAPPER=$(find android-src -type f -name gradlew | head -n 1)
+          if [ -z "$WRAPPER" ]; then echo 'gradlew not found'; exit 1; fi
+          echo "PROJECT_DIR=$(dirname "$WRAPPER")" >> "$GITHUB_ENV"
+
+      - name: Build debug APK
+        run: |
+          cd "$PROJECT_DIR"
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dukkanak-APK
+          path: android-src/**/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
