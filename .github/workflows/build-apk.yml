@@ -32,6 +32,16 @@ jobs:
           set -e
           unzip -o dokkanak-android-project-v2.zip -d android-src
 
+      - name: Fix Java and Kotlin compatibility
+        shell: bash
+        run: |
+          set -e
+          APP_GRADLE="android-src/dokkanak-android-project/dokkanak_android/app/build.gradle"
+          test -f "$APP_GRADLE"
+          sed -i 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' "$APP_GRADLE"
+          echo "Updated Java compatibility settings:"
+          grep -nE 'sourceCompatibility|targetCompatibility|jvmTarget' "$APP_GRADLE" || true
+
       - name: Check project files
         shell: bash
         run: |
