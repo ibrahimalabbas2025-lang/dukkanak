@@ -38,9 +38,22 @@ jobs:
           set -e
           APP_GRADLE="android-src/dokkanak-android-project/dokkanak_android/app/build.gradle"
           test -f "$APP_GRADLE"
-          sed -i 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' "$APP_GRADLE"
-          echo "Updated Java compatibility settings:"
-          grep -nE 'sourceCompatibility|targetCompatibility|jvmTarget' "$APP_GRADLE" || true
+
+          cat >> "$APP_GRADLE" <<'EOF'
+
+          tasks.withType(JavaCompile).configureEach {
+              sourceCompatibility = JavaVersion.VERSION_17
+              targetCompatibility = JavaVersion.VERSION_17
+          }
+
+          tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+          EOF
+
+          echo "Java and Kotlin targets set to 17"
 
       - name: Check project files
         shell: bash
