@@ -21,10 +21,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle 8.7
+      - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.7'
+          gradle-version: '8.9'
 
       - name: Extract Android project
         shell: bash
@@ -37,11 +37,9 @@ jobs:
         run: |
           set -e
           PROJECT="android-src/dokkanak-android-project/dokkanak_android"
-          echo "Checking Android project..."
           test -f "$PROJECT/settings.gradle" -o -f "$PROJECT/settings.gradle.kts"
           test -f "$PROJECT/app/build.gradle" -o -f "$PROJECT/app/build.gradle.kts"
-          echo "Project files found."
-          find "$PROJECT" -maxdepth 3 -type f | sort
+          echo "Android project files found."
 
       - name: Build debug APK
         shell: bash
