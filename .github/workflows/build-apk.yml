@@ -4,6 +4,9 @@ name: Build Dukkanak APK
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,22 +15,41 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Set up Java 17
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
+      - name: Set up Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
 
-      - name: Extract project ZIP
+      - name: Extract Android project
+        shell: bash
         run: |
+          set -e
           unzip -o dokkanak-android-project-v2.zip -d android-src
 
-      - name: Build APK
+      - name: Check project files
+        shell: bash
+        run: |
+          set -e
+          PROJECT="android-src/dokkanak-android-project/dokkanak_android"
+          echo "Checking Android project..."
+          test -f "$PROJECT/settings.gradle" -o -f "$PROJECT/settings.gradle.kts"
+          test -f "$PROJECT/app/build.gradle" -o -f "$PROJECT/app/build.gradle.kts"
+          echo "Project files found."
+          find "$PROJECT" -maxdepth 3 -type f | sort
+
+      - name: Build debug APK
+        shell: bash
         working-directory: android-src/dokkanak-android-project/dokkanak_android
-        run: gradle assembleDebug
+        run: |
+          set -e
+          gradle --no-daemon assembleDebug
+          find app/build/outputs/apk -type f -name "*.apk" -print
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -35,3 +57,4 @@ jobs:
           name: dokkanak-apk
           path: android-src/dokkanak-android-project/dokkanak_android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+          
